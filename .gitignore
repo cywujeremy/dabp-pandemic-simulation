@@ -1,2 +1,3 @@
 /.vscode
-/nn
+/nn/data/data.pkl
+*.pyc
