@@ -24,14 +24,11 @@ import datetime
 import warnings
 warnings.filterwarnings('ignore')
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-print("Device: ", device)
-
 BATCH_SIZE = 64
 # LEARNING_RATE = 1e-3
-LEARNING_RATE = 1e-6
+LEARNING_RATE = 1e-3
 # LEARNING_RATE = 0.00035
-EPOCHS = 5
+EPOCHS = 20
 
 def train(model, train_loader, optimizer, criterion, scaler, scheduler, epoch):
 
@@ -46,9 +43,9 @@ def train(model, train_loader, optimizer, criterion, scaler, scheduler, epoch):
 
         X, y = X.float().cuda(), y.float().cuda()
 
-        with autocast():
-            output = model(X)
-            loss = criterion(output, y)
+        # with autocast():
+        output = model(X).squeeze()
+        loss = criterion(output, y)
         
         total_loss += float(loss)
         batch_bar.set_postfix(
@@ -81,13 +78,13 @@ def validation(model, val_loader, criterion, epoch, val_mse, save_model=True):
         X, y = X.float().cuda(), y.long().cuda()
 
         with torch.no_grad():
-            output = model(X)
+            output = model(X).squeeze()
         
         mse = criterion(output, y)
         
         batch_bar.set_postfix(MSE=f"{float(mse):.4f}")
         batch_bar.update()
-        epoch_mse.append(mse)
+        epoch_mse.append(float(mse.cpu()))
 
     batch_bar.close()
     epoch_mse = np.array(epoch_mse)
@@ -96,9 +93,9 @@ def validation(model, val_loader, criterion, epoch, val_mse, save_model=True):
 
     if save_model:
         model_name = 'model_' + time.strftime('%Y%m%d_%H%M%S', time.localtime())
-        model_path = f'model/trained_models/{model_name}_checkpoint_{epoch}.pkl'
+        model_path = f'models/trained_models/{model_name}_checkpoint_{epoch}.pkl'
         torch.save(model, model_path)
-    
+
 
 def main():
     batch_size = BATCH_SIZE
@@ -122,7 +119,7 @@ def main():
     # model = torch.load(CHECKPOINT_MODEL_DIR).cuda()
     
 
-    criterion = nn.MSELoss() # TODO: What loss do you need for sequence to sequence models? 
+    criterion = nn.L1Loss() # TODO: What loss do you need for sequence to sequence models? 
     # Do you need to transpose or permute the model output to find out the loss? Read its documentation
     optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=5e-5) # TODO: Adam works well with LSTM (use lr = 2e-3)
     # optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9, weight_decay=5e-5, nesterov=True)
@@ -140,7 +137,7 @@ def main():
 
         train(model, train_loader, optimizer, criterion, scaler, scheduler, epoch)
 
-        if (epoch % 5 == 0) & (epoch != 0):
+        if (epoch % 2 == 0) & (epoch != 0):
             validation(model, val_loader, criterion, epoch, val_mse)
 
     # CHECKPOINT_MODEL_DIR = "model/trained_models/model_20220405_133933_checkpoint_40.pkl"
