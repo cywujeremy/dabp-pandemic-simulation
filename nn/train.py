@@ -25,9 +25,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 BATCH_SIZE = 64
-# LEARNING_RATE = 1e-3
 LEARNING_RATE = 1e-3
-# LEARNING_RATE = 0.00035
 EPOCHS = 20
 
 def train(model, train_loader, optimizer, criterion, scaler, scheduler, epoch):
@@ -105,22 +103,16 @@ def main():
     train_data = SIRSimulatedData(partition='train')
     val_data = SIRSimulatedData(partition='dev')
     # test_data = SIRSimulatedData(partition='test')
-
-    # train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, collate_fn=train_data.collate_fn,
-    #                           num_workers=16, pin_memory=True) # TODO: Define the train loader. Remember to pass in a parameter (function) for the collate_fn argument 
     
     train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=1, pin_memory=True)
-    val_loader = DataLoader(val_data, batch_size=batch_size, shuffle=False, num_workers=1, pin_memory=True) # TODO: Define the val loader. Remember to pass in a parameter (function) for the collate_fn argument 
-    # test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False, num_workers=1, pin_memory=True) # TODO: Define the test loader. Remember to pass in a parameter (function) for the collate_fn argument 
+    val_loader = DataLoader(val_data, batch_size=batch_size, shuffle=False, num_workers=1, pin_memory=True) 
 
     model = Network(4, 256, bidirectional=True)
    
     # CHECKPOINT_MODEL_DIR = "model/trained_models/model_20220408_111048_checkpoint_5.pkl"
     # model = torch.load(CHECKPOINT_MODEL_DIR).cuda()
     
-
-    criterion = nn.L1Loss() # TODO: What loss do you need for sequence to sequence models? 
-    # Do you need to transpose or permute the model output to find out the loss? Read its documentation
+    criterion = nn.L1Loss() 
     optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=5e-5) # TODO: Adam works well with LSTM (use lr = 2e-3)
     # optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9, weight_decay=5e-5, nesterov=True)
     # optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9)
@@ -148,19 +140,6 @@ def main():
                            "validation_lev_distance": val_mse})
     log_name = 'log_' + time.strftime('%Y%m%d_%H%M%S', time.localtime())
     log_df.to_csv(f"log/{log_name}.csv")
-
-
-    # TODO: Write the model evaluation function if you want to validate after every epoch
-
-    # You are free to write your own code for model evaluation or you can use the code from previous homeworks' starter notebooks
-    # However, you will have to make modifications because of the following.
-    # (1) The dataloader returns 4 items unlike 2 for hw2p2
-    # (2) The model forward returns 2 outputs
-    # (3) The loss may require transpose or permuting
-
-    # Note that when you give a higher beam width, decoding will take a longer time to get executed
-    # Therefore, it is recommended that you calculate only the val dataset's Levenshtein distance (train not recommended) with a small beam width
-    # When you are evaluating on your test set, you may have a higher beam width
 
 if __name__ == '__main__':
     main()
