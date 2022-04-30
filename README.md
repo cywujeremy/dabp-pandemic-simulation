@@ -1,4 +1,4 @@
-# Pandemic Simulation and $R_0$ Estimation
+# Pandemic Simulation and R_0 Estimation
 
 This is the repository for the final group project of 94-867 Decision Analytics for Business and Policy class (Spring, 2022) at CMU. The main idea of this project is to estimate the basic reproduction number of CoVID-19 overtime by simulating the pandemic using the dynamic SIR model.
 
